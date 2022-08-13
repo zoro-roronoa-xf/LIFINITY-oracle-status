@@ -1,0 +1,24 @@
+{
+  "name": "stable_price",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && ANCHOR_WALLET=updatePayer.json node dist/index.js"
+  },
+  "author": "zoro",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.5.5"
+  },
+  "dependencies": {
+    "@project-serum/anchor": "^0.20.1",
+    "@pythnetwork/client": "^2.5.3",
+    "@solana/web3.js": "^1.33.0",
+    "@types/websocket": "^1.0.5",
+    "axios": "^0.25.0",
+    "bignumber.js": "^9.0.2",
+    "jsbi": "^4.1.0",
+    "websocket": "^1.0.34"
+  }
+}
