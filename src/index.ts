@@ -2,12 +2,14 @@ import * as anchor from '@project-serum/anchor';
 import { Pyth } from './Pyth'
 import { lineNotify } from './LineNotify'
 import { Program, Provider } from '@project-serum/anchor';
-import { PublicKey, Connection, Keypair, ConfirmOptions } from '@solana/web3.js';
+import { PublicKey, Connection, Keypair, ConfirmOptions, Transaction } from '@solana/web3.js';
  
 const ParamOracleUpdate = 0.0018
 const ParamStopTime = 10
 
-const config = Keypair.fromSecretKey(new Uint8Array([]));
+const config_SOLUSDC = Keypair.fromSecretKey(new Uint8Array([]));
+const config_SOLUSDT = Keypair.fromSecretKey(new Uint8Array([]));
+const config_SOLUXD = Keypair.fromSecretKey(new Uint8Array([]));
 
 const idl = require('../idl/lifinity_amm.json');
 
@@ -30,29 +32,66 @@ const WebSocket = require('ws');
 async function updateOracle(status: number){
     console.log("update oracle:",status)
 
-    let amm = new PublicKey("amgK1WE8Cvae4mVdj4AhXSsknWsjaGgo1coYicasBnM");
-    let authority = new PublicKey("HKJ6D9gssWAY8Zpkaf9MK3W8UEeuw4AHTMea9DFX68ip");
+    let amm_SOLUSDC = new PublicKey("amgK1WE8Cvae4mVdj4AhXSsknWsjaGgo1coYicasBnM");
+    let authority_SOLUSDC = new PublicKey("HKJ6D9gssWAY8Zpkaf9MK3W8UEeuw4AHTMea9DFX68ip");
+
+    let amm_SOLUSDT = new PublicKey("2x8Bmv9wj2a4LxADBWKiLyGRgAosr8yJXuZyvS8adirK");
+    let authority_SOLUSDT = new PublicKey("Efnr2xpnC5nMsxpX3NtqWvDzrPBYp6wVAJUxUf4kv9g3");
+
+    let amm_SOLUXD = new PublicKey("GjnY1NbZafYu6VSK2ELh5NRZs7udGAUR2KoAB7pYxJak");
+    let authority_SOLUXD = new PublicKey("8W6j7V2XRv7Y9okzRDH2mYVaNRQn5oF5BS5ca6og5cB4");
+
     const oracleStatus = new anchor.BN(status)
     
+    const tx = new Transaction();
+    
     try{
-        let tx_init = await program.rpc.oracleStatusUpdate(
+        tx.add(program.instruction.oracleStatusUpdate(
             oracleStatus,
             {
                 accounts: {
-                    amm: amm,
-                    authority: authority,
-                    configAccount: config.publicKey,
+                    amm: amm_SOLUSDC,
+                    authority: authority_SOLUSDC,
+                    configAccount: config_SOLUSDC.publicKey,
                 },
                 instructions: [],
-                signers: [config],
+                signers: [config_SOLUSDC],
             }
-        );
+        ));
     
-        console.log(tx_init)
+        tx.add(program.instruction.oracleStatusUpdate(
+            oracleStatus,
+            {
+                accounts: {
+                    amm: amm_SOLUSDT,
+                    authority: authority_SOLUSDT,
+                    configAccount: config_SOLUSDT.publicKey,
+                },
+                instructions: [],
+                signers: [config_SOLUSDT],
+            }
+        ));
     
-        let fetchedConfigAccount = await program.account.config.fetch(config.publicKey);
-        // console.log("---CONFIG ACCOUNT---")
-        console.log("oracleStatus:",fetchedConfigAccount.oracleStatus.toNumber());
+        tx.add(program.instruction.oracleStatusUpdate(
+            oracleStatus,
+            {
+                accounts: {
+                    amm: amm_SOLUXD,
+                    authority: authority_SOLUXD,
+                    configAccount: config_SOLUXD.publicKey,
+                },
+                instructions: [],
+                signers: [config_SOLUXD],
+            }
+        ));
+
+        const txid = await program.provider.send(tx,[config_SOLUSDC,config_SOLUSDT,config_SOLUXD]);
+
+        console.log(txid)
+    
+        // let fetchedConfigAccount = await program.account.config.fetch(config.publicKey);
+        // // console.log("---CONFIG ACCOUNT---")
+        // console.log("oracleStatus:",fetchedConfigAccount.oracleStatus.toNumber());
 
         return 0
 
