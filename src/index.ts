@@ -104,6 +104,8 @@ async function updateOracle(status: number){
 
 function websocktInit(pyth: Pyth){
 
+    console.log("websocket Start")
+
     let oracleStatus = 0
     let updateTime = new Date();
     let beforeLienTime = new Date();
@@ -122,11 +124,11 @@ function websocktInit(pyth: Pyth){
         ws.send(param1);
     });
 
-    ws.on('close', function incoming() {
+    ws.onclose = function (  ) {
         console.log('-- ws close');
         pyth.stop()
         websocktInit(pyth);
-    });
+    };
 
     ws.onmessage = async function(e: any) {
         try{
@@ -142,8 +144,6 @@ function websocktInit(pyth: Pyth){
 
                             if(update === 0 && pyth.priceSolUsd != 0 && price != 0){
                                 const priceDiff = (pyth.priceSolUsd / price) - 1
-
-                                // console.log("pyth:",pyth.priceSolUsd,"ftx:",price,"priceDiff:",priceDiff)
 
                                 if(oracleStatus === 0 && priceDiff > ParamOracleUpdate){
                                     console.log("Status 1:",priceDiff, ParamOracleUpdate)
@@ -166,7 +166,6 @@ function websocktInit(pyth: Pyth){
                                     }
                                     update = 0;
                                 }else if ((oracleStatus === 1 || oracleStatus === 2) && (priceDiff < ParamOracleUpdate && priceDiff > ParamOracleUpdate * -1) && (updateTime.getTime() + (ParamStopTime * 1000) < dateNow.getTime())){
-                                    ParamStopTime
                                     console.log("Status 0:",priceDiff, ParamOracleUpdate)
                                     update = 1;
                                     const updateResult = await updateOracle(0);
@@ -182,6 +181,9 @@ function websocktInit(pyth: Pyth){
                                 console.log("生存通知\n (OracleStatus:" + String(oracleStatus) + ")");
                                 lineNotify("生存通知\n (OracleStatus:" + String(oracleStatus) + ")");
                                 beforeLienTime = dateNow
+                                if(dateNow.getUTCHours() === 1){
+                                    ws.onclose()
+                                }
                             }
                         }
                     }
